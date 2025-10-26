@@ -1,0 +1,83 @@
+[
+ {
+  "directory": "C:\\dev\\code\\cpp\\XFractal\\build",
+  "arguments": [
+   "g++",
+   "-Wall",
+   "-Wextra",
+   "-std=c++26",
+   "-I../src",
+   "-I../include",
+   "-IC:/msys64/ucrt64/include",
+   "-I",
+   "C:/msys64/ucrt64/include",
+   "-I",
+   "C:/msys64/ucrt64/include/c++/12.2.0",
+   "-I",
+   "C:/msys64/ucrt64/include/c++/12.2.0/x86_64-w64-mingw32",
+   "-I",
+   "C:/msys64/ucrt64/x86_64-w64-mingw32/include",
+   "-MMD",
+   "-MP",
+   "-c",
+   "../src/main.cpp",
+   "-o",
+   "main.o"
+  ],
+  "file": "../src/main.cpp"
+ },
+ {
+  "directory": "C:\\dev\\code\\cpp\\XFractal\\build",
+  "arguments": [
+   "g++",
+   "-Wall",
+   "-Wextra",
+   "-std=c++26",
+   "-I../src",
+   "-I../include",
+   "-IC:/msys64/ucrt64/include",
+   "-I",
+   "C:/msys64/ucrt64/include",
+   "-I",
+   "C:/msys64/ucrt64/include/c++/12.2.0",
+   "-I",
+   "C:/msys64/ucrt64/include/c++/12.2.0/x86_64-w64-mingw32",
+   "-I",
+   "C:/msys64/ucrt64/x86_64-w64-mingw32/include",
+   "-MMD",
+   "-MP",
+   "-c",
+   "../src/render.cpp",
+   "-o",
+   "render.o"
+  ],
+  "file": "../src/render.cpp"
+ },
+ {
+  "directory": "C:\\dev\\code\\cpp\\XFractal\\build",
+  "arguments": [
+   "g++",
+   "-Wall",
+   "-Wextra",
+   "-std=c++26",
+   "-I../src",
+   "-I../include",
+   "-IC:/msys64/ucrt64/include",
+   "-I",
+   "C:/msys64/ucrt64/include",
+   "-I",
+   "C:/msys64/ucrt64/include/c++/12.2.0",
+   "-I",
+   "C:/msys64/ucrt64/include/c++/12.2.0/x86_64-w64-mingw32",
+   "-I",
+   "C:/msys64/ucrt64/x86_64-w64-mingw32/include",
+   "-MMD",
+   "-MP",
+   "-c",
+   "../src/window.cpp",
+   "-o",
+   "window.o"
+  ],
+  "file": "../src/window.cpp"
+ }
+]
