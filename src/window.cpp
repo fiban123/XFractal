@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
+#include <thread>
 #include <vector>
 
 void window_init() { glfwInit(); }
@@ -13,7 +14,7 @@ void window_init() { glfwInit(); }
 void Window::window_refresh_callback(GLFWwindow* window) {
     // recover the C++ object pointer
     auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
-    if (self) self->draw();
+    if (self) self->_update();
     // glFinish();
 }
 
@@ -22,7 +23,7 @@ void Window::framebuffer_size_callback(GLFWwindow* window, int width,
     glViewport(0, 0, width, height);
 
     auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
-    if (self) self->draw();
+    if (self) self->_update();
 }
 
 std::string Window::loadFile(const std::string& path) {
@@ -96,6 +97,9 @@ void Window::create_fullscreen_quad() {
         1.0f,  1.0f,  1.0f, 1.0f   // TR
     };
 
+    // init texture
+    pixels.resize(width * height * 3);
+
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);
 
@@ -116,7 +120,7 @@ void Window::create_fullscreen_quad() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-GLuint Window::create_fullscreen_texture() {
+void Window::init_fullscreen_texture() {
     /*
     for (uint64_t i = 0; i < pixels.size(); i++) {
         if (i % 23 == 0) {
@@ -124,11 +128,9 @@ GLuint Window::create_fullscreen_texture() {
         }
     }*/
 
-    renderer.pixels = pixels;
-    renderer.render(width, height);
-    GLuint tex = 0;
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
+    pixels.resize(width * height * 3);
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
 
     // tight packing for byte RGB
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -141,10 +143,18 @@ GLuint Window::create_fullscreen_texture() {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, width, height, 0, GL_RGB,
                  GL_UNSIGNED_BYTE, pixels.data());
     glBindTexture(GL_TEXTURE_2D, 0);
-    return tex;
 }
 
-void Window::draw() {
+void Window::_update() {
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    // update texture data (same size, new pixels)
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB,
+                    GL_UNSIGNED_BYTE, pixels.data());
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+
     // render
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -166,7 +176,7 @@ void Window::draw() {
     // glfw stuff
     glfwSwapBuffers(window);
     glfwPollEvents();
-    glfwGetWindowSize(window, &width, &height);
+    // glfwGetWindowSize(window, &width, &height);
 }
 
 void Window::init(int _width, int _height) {
@@ -201,7 +211,11 @@ void Window::start() {
     create_shader_prorgam();
     create_fullscreen_quad();
 
-    texture = create_fullscreen_texture();
+    // renderer.render(width, height);
+    init_fullscreen_texture();
+
+    std::thread render_thread([this] { renderer.render(width, height); });
+    // renderer.render(width, height);
 
     glUseProgram(shader_program);
     GLint loc = glGetUniformLocation(shader_program, "screenTexture");
@@ -210,7 +224,7 @@ void Window::start() {
 
     while (!glfwWindowShouldClose(window)) {
         // input
-        draw();
+        _update();
     }
 
     // cleanup

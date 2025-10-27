@@ -15,13 +15,13 @@ ifeq ($(MODE),debug)
     CXXFLAGS += -ggdb -O0
     LDFLAGS +=
 else ifeq ($(MODE),normal)
-    CXXFLAGS += 
-    LDFLAGS +=
+    CXXFLAGS += -O1
+    LDFLAGS += 
 else ifeq ($(MODE),release)
     # Release flags
     CXXFLAGS += -O3 -march=native -funroll-loops -flto \
                 -fstack-protector-strong -D_FORTIFY_SOURCE=2 -fPIE -DNDEBUG
-    LDFLAGS  += -flto -pie -s -Wl,--as-needed -Wl
+    LDFLAGS  += -flto
 else
     $(error Unknown build mode '$(MODE)'. Valid options: normal, debug, release)
 endif

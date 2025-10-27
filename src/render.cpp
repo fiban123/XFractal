@@ -21,6 +21,7 @@ void MandelBrotRenderer::render(int _width, int _height) {
     M.init_set_i(height, _height);
 
     MType tmp, zx2, zy2, nzx, nzy, tx, ty, cx, cy, zx, zy;
+    M.init(tmp);
     M.init(zx2);
     M.init(zy2);
     M.init(nzx);
@@ -69,7 +70,7 @@ void MandelBrotRenderer::render(int _width, int _height) {
             for (; iter < (int)max_iter; iter++) {
                 // iterrate
 
-                // calculate zx^2 and zy^2
+                // calculate zx^2 and zy^const 2
                 M.mul(zx2, zx, zx);
                 M.mul(zy2, zy, zy);
 

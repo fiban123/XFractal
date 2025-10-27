@@ -5,6 +5,8 @@
 
 #include <vector>
 
+#include "render_config.hpp"
+
 struct DoubleMathFuncs {
     inline static void init(double& n) { (void)n; }
 
@@ -35,8 +37,49 @@ struct DoubleMathFuncs {
     inline static void clear(double& a) { (void)a; }
 };
 
-using MType = double;
-using MathFuncs = DoubleMathFuncs;
+struct MPFRMathFuncs {
+    inline static mpfr_prec_t prec = MPFR_PREC;
+    const static mpfr_rnd_t rnd = MPFR_RNDN;
+
+    inline static void init(mpfr_t n) { mpfr_init2(n, prec); }
+
+    inline static void add(mpfr_t n, mpfr_t a, mpfr_t b) {
+        mpfr_add(n, a, b, rnd);
+    }
+    inline static void sub(mpfr_t n, mpfr_t a, mpfr_t b) {
+        mpfr_sub(n, a, b, rnd);
+    }
+    inline static void mul(mpfr_t n, mpfr_t a, mpfr_t b) {
+        mpfr_mul(n, a, b, rnd);
+    }
+    inline static void div(mpfr_t n, mpfr_t a, mpfr_t b) {
+        mpfr_div(n, a, b, rnd);
+    }
+
+    inline static void set(mpfr_t n, mpfr_t x) { mpfr_set(n, x, rnd); }
+    inline static void set_i(mpfr_t n, int x) { mpfr_set_si(n, x, rnd); }
+    inline static void set_d(mpfr_t n, double x) { mpfr_set_d(n, x, rnd); }
+    inline static void init_set(mpfr_t n, mpfr_t x) {
+        mpfr_init_set(n, x, rnd);
+    }
+    inline static void init_set_i(mpfr_t n, int x) {
+        mpfr_init_set_si(n, x, rnd);
+    }
+    inline static void init_set_d(mpfr_t n, double x) {
+        mpfr_init_set_d(n, x, rnd);
+    }
+    inline static int get_i(mpfr_t n) { return mpfr_get_si(n, rnd); }
+    inline static double get_d(mpfr_t n) { return mpfr_get_d(n, rnd); }
+
+    inline static int cmp(mpfr_t a, mpfr_t b) { return mpfr_cmp(a, b); }
+    inline static int cmp_i(mpfr_t a, int b) { return mpfr_cmp_si(a, b); }
+    inline static int cmp_d(mpfr_t a, double b) { return mpfr_cmp_d(a, b); }
+
+    inline static void clear(mpfr_t n) { mpfr_clear(n); }
+};
+
+using MType = mpfr_t;
+using MathFuncs = MPFRMathFuncs;
 
 struct RendererBase {
     std::vector<unsigned char>& pixels;

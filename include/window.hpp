@@ -37,8 +37,8 @@ struct Window {
     void create_fullscreen_quad();
 
     // rendering stuff
-    void draw();
-    GLuint create_fullscreen_texture();
+    void _update();
+    void init_fullscreen_texture();
 
     Window(int _width, int _height)
         : width(_width), height(_height), renderer(pixels) {}
