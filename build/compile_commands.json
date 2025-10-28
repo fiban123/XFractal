@@ -1,11 +1,12 @@
 [
  {
-  "directory": "C:\\dev\\code\\cpp\\XFractal\\build",
+  "directory": "C:\\dev\\cpp\\XFractal\\build",
   "arguments": [
    "g++",
    "-Wall",
    "-Wextra",
    "-std=c++26",
+   "-O1",
    "-I../src",
    "-I../include",
    "-IC:/msys64/ucrt64/include",
@@ -27,12 +28,13 @@
   "file": "../src/main.cpp"
  },
  {
-  "directory": "C:\\dev\\code\\cpp\\XFractal\\build",
+  "directory": "C:\\dev\\cpp\\XFractal\\build",
   "arguments": [
    "g++",
    "-Wall",
    "-Wextra",
    "-std=c++26",
+   "-O1",
    "-I../src",
    "-I../include",
    "-IC:/msys64/ucrt64/include",
@@ -54,12 +56,13 @@
   "file": "../src/render.cpp"
  },
  {
-  "directory": "C:\\dev\\code\\cpp\\XFractal\\build",
+  "directory": "C:\\dev\\cpp\\XFractal\\build",
   "arguments": [
    "g++",
    "-Wall",
    "-Wextra",
    "-std=c++26",
+   "-O1",
    "-I../src",
    "-I../include",
    "-IC:/msys64/ucrt64/include",
