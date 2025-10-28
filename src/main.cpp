@@ -1,6 +1,3 @@
-#include <iostream>
-
-#include "render.hpp"
 #include "window.hpp"
 
 int main() {

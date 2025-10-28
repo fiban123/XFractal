@@ -5,7 +5,7 @@
 
 #include <string>
 
-#include "render.hpp"
+#include "renderer.hpp"
 
 void window_init();
 
@@ -13,12 +13,11 @@ struct Window {
     int width, height;
     GLFWwindow* window;
 
-    GLuint frag, vert, shader_program;
+    GLuint tex_shader_program, vert_shader_program;
     GLuint texture;
-    GLuint vao, vbo, ebo;
+    GLuint vao, vbo;
 
-    std::vector<unsigned char> pixels;
-    MandelBrotRenderer renderer;
+    Renderer renderer;
 
     void init(int _width, int _height);
     void start();
@@ -36,8 +35,8 @@ struct Window {
     // shader stuff
     static std::string loadFile(const std::string& path);
     static GLuint compile_shader(GLenum type, const std::string& src);
-    GLuint link_shader_program();
-    void create_shader_prorgam();
+    GLuint link_shader_program(GLint vert, GLint frag);
+    void create_shader_prorgam(std::string vert_path, std::string frag_path);
 
     // vertice stuff
     void create_fullscreen_quad();
@@ -46,6 +45,5 @@ struct Window {
     void _update();
     void init_fullscreen_texture();
 
-    Window(int _width, int _height)
-        : width(_width), height(_height), renderer(pixels) {}
+    Window(int _width, int _height) : width(_width), height(_height) {}
 };

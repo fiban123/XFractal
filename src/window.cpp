@@ -65,7 +65,7 @@ GLuint Window::compile_shader(GLenum type, const std::string& src) {
     return sh;
 }
 
-GLuint Window::link_shader_program() {
+GLuint Window::link_shader_program(GLint vert, GLint frag) {
     GLuint prog = glCreateProgram();
     glAttachShader(prog, vert);
     glAttachShader(prog, frag);
@@ -84,13 +84,14 @@ GLuint Window::link_shader_program() {
     return prog;
 }
 
-void Window::create_shader_prorgam() {
-    std::string vertSrc = loadFile("../shader/vertex.glsl");
-    std::string fragSrc = loadFile("../shader/fragment.glsl");
+void Window::create_shader_prorgam(std::string vert_path,
+                                   std::string frag_path) {
+    std::string vertSrc = loadFile(vert_path);
+    std::string fragSrc = loadFile(frag_path);
 
-    vert = compile_shader(GL_VERTEX_SHADER, vertSrc);
-    frag = compile_shader(GL_FRAGMENT_SHADER, fragSrc);
-    shader_program = link_shader_program();
+    GLint vert = compile_shader(GL_VERTEX_SHADER, vertSrc);
+    GLint frag = compile_shader(GL_FRAGMENT_SHADER, fragSrc);
+    tex_shader_program = link_shader_program(vert, frag);
     // shaders can be deleted after linking
     glDeleteShader(vert);
     glDeleteShader(frag);
@@ -105,9 +106,6 @@ void Window::create_fullscreen_quad() {
         -1.0f, 1.0f,  0.0f, 1.0f,  // TL
         1.0f,  1.0f,  1.0f, 1.0f   // TR
     };
-
-    // init texture
-    pixels.resize(width * height * 3);
 
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);
@@ -137,7 +135,6 @@ void Window::init_fullscreen_texture() {
         }
     }*/
 
-    pixels.resize(width * height * 3);
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
 
@@ -150,7 +147,7 @@ void Window::init_fullscreen_texture() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, width, height, 0, GL_RGB,
-                 GL_UNSIGNED_BYTE, pixels.data());
+                 GL_UNSIGNED_BYTE, renderer.pixels.data());
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
@@ -160,7 +157,7 @@ void Window::_update() {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     // update texture data (same size, new pixels)
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB,
-                    GL_UNSIGNED_BYTE, pixels.data());
+                    GL_UNSIGNED_BYTE, renderer.pixels.data());
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -169,7 +166,7 @@ void Window::_update() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     // bind program, texture and VAO
-    glUseProgram(shader_program);
+    glUseProgram(tex_shader_program);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
     glBindVertexArray(vao);
@@ -192,7 +189,10 @@ void Window::init(int _width, int _height) {
     width = _width;
     height = _height;
 
-    renderer.init(-2, 1, -1, 1, 64);
+    renderer.update_size_bounds(width, height);
+    renderer.update_fractal_bounds(-2.0, 1.0, -1.0, 1.0);
+    renderer.set_math_type(MathType::DOUBLE);
+    renderer.reize_pixels(width, height);
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -219,17 +219,15 @@ void Window::start() {
 
     // init
 
-    create_shader_prorgam();
+    create_shader_prorgam("../shader/vertex.glsl", "../shader/fragment.glsl");
     create_fullscreen_quad();
 
-    // renderer.render(width, height);
     init_fullscreen_texture();
 
-    std::thread render_thread([this] { renderer.render(width, height); });
-    // renderer.render(width, height);
+    renderer.render_mandelbrot(64, 1, 1);
 
-    glUseProgram(shader_program);
-    GLint loc = glGetUniformLocation(shader_program, "screenTexture");
+    glUseProgram(tex_shader_program);
+    GLint loc = glGetUniformLocation(tex_shader_program, "screenTexture");
     if (loc >= 0) glUniform1i(loc, 0);
     glUseProgram(0);
 
@@ -242,7 +240,7 @@ void Window::start() {
     glDeleteTextures(1, &texture);
     glDeleteBuffers(1, &vbo);
     glDeleteVertexArrays(1, &vao);
-    glDeleteProgram(shader_program);
+    glDeleteProgram(tex_shader_program);
 
     glfwTerminate();
 }

@@ -3,9 +3,20 @@
 #include <gmp.h>
 #include <mpfr.h>
 
-#include <vector>
-
 #include "render_config.hpp"
+
+template <typename MType>
+struct FractalBounds {
+    double d_x_min, d_x_max;
+    double d_y_min, d_y_max;
+    double i_width, i_height;
+
+    MType x_min, x_max;
+    MType y_min, y_max;
+    MType width, height;
+};
+
+enum class MathType { DOUBLE, FLOAT, MPFR, MPQ };
 
 struct DoubleMathFuncs {
     inline static void init(double& n) { (void)n; }
@@ -76,42 +87,4 @@ struct MPFRMathFuncs {
     inline static int cmp_d(mpfr_t a, double b) { return mpfr_cmp_d(a, b); }
 
     inline static void clear(mpfr_t n) { mpfr_clear(n); }
-};
-
-#ifdef MODE_MPFR
-using MType = mpfr_t;
-using MathFuncs = MPFRMathFuncs;
-#elifdef MODE_DOUBLE
-using MType = double;
-using MathFuncs = DoubleMathFuncs;
-#endif
-struct RendererBase {
-    std::vector<unsigned char>& pixels;
-
-    constexpr static MathFuncs M{};
-
-    MType width, height;
-
-    MType x_min, x_max;
-    MType y_min, y_max;
-
-    void _init_bounds(double _x_min, double _x_max, double _y_min,
-                      double _y_max);
-
-    virtual void render(int _width, int _height) = 0;
-
-    virtual ~RendererBase() = default;
-
-    RendererBase(std::vector<unsigned char>& _pixels) : pixels(_pixels) {}
-};
-
-struct MandelBrotRenderer : RendererBase {
-    unsigned int max_iter;
-
-    virtual void init(double _x_min, double _x_max, double _y_min,
-                      double _y_max, int _max_iter);
-    virtual void render(int _width, int _height);
-
-    MandelBrotRenderer(std::vector<unsigned char>& _pixels)
-        : RendererBase(_pixels) {}
 };
