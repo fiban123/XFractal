@@ -1,16 +1,16 @@
 #include "render.hpp"
 
 #include <iostream>
-void RendererBase::_init_bounds(int _x_min, int _x_max, int _y_min,
-                                int _y_max) {
+void RendererBase::_init_bounds(double _x_min, double _x_max, double _y_min,
+                                double _y_max) {
     M.init_set_i(x_min, _x_min);
     M.init_set_i(x_max, _x_max);
     M.init_set_i(y_min, _y_min);
     M.init_set_i(y_max, _y_max);
 }
 
-void MandelBrotRenderer::init(int _x_min, int _x_max, int _y_min, int _y_max,
-                              int _max_iter) {
+void MandelBrotRenderer::init(double _x_min, double _x_max, double _y_min,
+                              double _y_max, int _max_iter) {
     _init_bounds(_x_min, _x_max, _y_min, _y_max);
 
     max_iter = _max_iter;

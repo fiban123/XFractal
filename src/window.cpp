@@ -2,7 +2,6 @@
 
 #include <GLFW/glfw3.h>
 
-#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -11,11 +10,10 @@
 
 void window_init() { glfwInit(); }
 
-void Window::window_refresh_callback(GLFWwindow* window) {
-    // recover the C++ object pointer
-    auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
-    if (self) self->_update();
-    // glFinish();
+void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
+                          int mods) {
+    if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
+        std::cout << "pressed ebter" << std::endl;
 }
 
 void Window::framebuffer_size_callback(GLFWwindow* window, int width,
@@ -24,6 +22,17 @@ void Window::framebuffer_size_callback(GLFWwindow* window, int width,
 
     auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
     if (self) self->_update();
+}
+
+void Window::mouse_button_callback(GLFWwindow* window, int button, int action,
+                                   int mods) {
+    double x, y;
+    glfwGetCursorPos(window, &x, &y);
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        std::cout << "pressed at " << x << " " << y << std::endl;
+    } else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+        std::cout << "released at " << x << " " << y << std::endl;
+    }
 }
 
 std::string Window::loadFile(const std::string& path) {
@@ -201,7 +210,9 @@ void Window::start() {
     glViewport(0, 0, width, height);
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetKeyCallback(window, key_callback);
     glfwSetWindowUserPointer(window, this);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
     // glfwSetWindowRefreshCallback(window, window_refresh_callback);
 
     glewInit();

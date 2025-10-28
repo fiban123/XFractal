@@ -6,9 +6,9 @@
 int main() {
     window_init();
 
-    Window window(4000, 2000);
+    Window window(2560 / 2, 1706 / 2);
 
-    window.init(4000, 2000);
+    window.init(2560 / 2, 1706 / 2);
 
     window.start();
 }

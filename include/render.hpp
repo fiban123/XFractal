@@ -78,9 +78,13 @@ struct MPFRMathFuncs {
     inline static void clear(mpfr_t n) { mpfr_clear(n); }
 };
 
+#ifdef MODE_MPFR
 using MType = mpfr_t;
 using MathFuncs = MPFRMathFuncs;
-
+#elifdef MODE_DOUBLE
+using MType = double;
+using MathFuncs = DoubleMathFuncs;
+#endif
 struct RendererBase {
     std::vector<unsigned char>& pixels;
 
@@ -91,7 +95,8 @@ struct RendererBase {
     MType x_min, x_max;
     MType y_min, y_max;
 
-    void _init_bounds(int _x_min, int _x_max, int _y_min, int _y_max);
+    void _init_bounds(double _x_min, double _x_max, double _y_min,
+                      double _y_max);
 
     virtual void render(int _width, int _height) = 0;
 
@@ -103,8 +108,8 @@ struct RendererBase {
 struct MandelBrotRenderer : RendererBase {
     unsigned int max_iter;
 
-    virtual void init(int _x_min, int _x_max, int _y_min, int _y_max,
-                      int _max_iter);
+    virtual void init(double _x_min, double _x_max, double _y_min,
+                      double _y_max, int _max_iter);
     virtual void render(int _width, int _height);
 
     MandelBrotRenderer(std::vector<unsigned char>& _pixels)
