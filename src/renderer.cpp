@@ -40,23 +40,10 @@ void Renderer::update_fractal_bounds(double x_min, double x_max, double y_min,
     double_bounds.d_y_min = y_min;
 }
 
-void Renderer::bound_zoom(int x_start, int y_start, int x_end, int y_end) {
-    // scale from 0 to 1
-    double x1 = x_start / double_bounds.width;
-    double y1 = y_start / double_bounds.height;
-
-    double x2 = x_end / double_bounds.width;
-    double x3 = y_end / double_bounds.height;
-
-    // double dx = x_max - x_min;
-    // double dy = y_max - y_min;
-
-    // double new_x_min = x_min + sx0 * dx;
-    // double new_x_max = x_min + sx1 * dx;
-
-    // invert Y
-    // double new_y_min = y_min + (1.0 - sy1) * dy;
-    // double new_y_max = y_min + (1.0 - sy0) * dy;
+void Renderer::bound_zoom(int wx, int wy, double zoom_factor) {
+    arb_bound_zoom<mpfr_t, mpfr_math_funcs>(mpfr_bounds, wx, wy, zoom_factor);
+    arb_bound_zoom<double, double_math_funcs>(double_bounds, wx, wy,
+                                              zoom_factor);
 }
 
 void Renderer::reize_pixels(int width, int height) {

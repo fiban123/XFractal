@@ -5,6 +5,27 @@
 
 #include "render_config.hpp"
 
+template <typename M, typename T>
+concept MathFuncsConcept = requires(T a, T b, T c, int i, double d) {
+    { M::init(a) };
+    { M::add(a, b, c) };
+    { M::sub(a, b, c) };
+    { M::mul(a, b, c) };
+    { M::div(a, b, c) };
+    { M::set(a, b) };
+    { M::set_i(a, i) };
+    { M::set_d(a, d) };
+    { M::init_set(a, b) };
+    { M::init_set_i(a, i) };
+    { M::init_set_d(a, d) };
+    { M::get_i(a) };
+    { M::get_d(a) };
+    { M::cmp(a, b) };
+    { M::cmp_i(a, i) };
+    { M::cmp_d(a, d) };
+    { M::clear(a) };
+};
+
 template <typename MType>
 struct FractalBounds {
     double d_x_min, d_x_max;
@@ -14,6 +35,17 @@ struct FractalBounds {
     MType x_min, x_max;
     MType y_min, y_max;
     MType width, height;
+
+    template <MathFuncsConcept<MType> auto& M>
+    void update_aux() {
+        d_x_min = M.get_d(x_min);
+        d_x_max = M.get_d(x_max);
+        d_y_min = M.get_d(y_min);
+        d_y_max = M.get_d(y_max);
+
+        i_width = M.get_i(width);
+        i_height = M.get_i(height);
+    }
 };
 
 enum class MathType { DOUBLE, FLOAT, MPFR, MPQ };

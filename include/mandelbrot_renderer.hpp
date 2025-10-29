@@ -4,10 +4,11 @@
 
 #include "math.hpp"
 
-template <typename MType, auto& M>
+template <typename MType, MathFuncsConcept<MType> auto& M>
 void _render_mandelbrot(FractalBounds<MType>& bounds, int res, int n_threads,
                         int max_iter, std::vector<unsigned char>& pixels) {
     std::cout << "renderer called" << std::endl;
+
     MType tmp, zx2, zy2, nzx, nzy, tx, ty, cx, cy, zx, zy;
     M.init(tmp);
     M.init(zx2);

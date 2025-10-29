@@ -12,8 +12,14 @@ void window_init() { glfwInit(); }
 
 void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
                           int mods) {
-    if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
+    if (key == GLFW_KEY_ENTER && action == GLFW_PRESS) {
         std::cout << "pressed ebter" << std::endl;
+        auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
+        if (self) {
+            self->renderer.bound_zoom(0, 0, 2);
+            self->renderer.render_mandelbrot(64, 1, 1);
+        }
+    }
 }
 
 void Window::framebuffer_size_callback(GLFWwindow* window, int width,
