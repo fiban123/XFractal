@@ -4,7 +4,7 @@ CXXFLAGS := -Wall -Wextra -std=c++26
 
 # libs
 
-LIBS := -lglfw3 -lopengl32 -lpthread  -lmpfr -lgmp -lglew32
+LIBS := -lglew32 -lglfw3 -lopengl32 -lgdi32 -luser32 -lpthread  -lmpfr -lgmp -lglew32
 LDFLAGS += $(LIBS)
 
 # Build mode: normal, debug, release
@@ -24,6 +24,14 @@ else ifeq ($(MODE),release)
     LDFLAGS  += -flto
 else
     $(error Unknown build mode '$(MODE)'. Valid options: normal, debug, release)
+endif
+
+# --- STATIC BUILD OPTION ---
+STATIC ?= false
+ifeq ($(STATIC),true)
+    # Force static linking of libstdc++, libgcc, and system libs
+    LDFLAGS += -static -static-libgcc -static-libstdc++
+	CXXFLAGS += -DGLEW_STATIC
 endif
 
 # Directories

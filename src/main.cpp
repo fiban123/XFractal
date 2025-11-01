@@ -1,11 +1,10 @@
+#include "render_config.hpp"
 #include "window.hpp"
 
 int main() {
     window_init();
-
-    Window window(2560 / 2, 1706 / 2);
-
-    window.init(2560 / 2, 1706 / 2);
+    Window window(START_WINDOW_X, START_WINDOW_Y);
+    window.init(START_WINDOW_X, START_WINDOW_Y);
 
     window.start();
 }

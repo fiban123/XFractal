@@ -2,22 +2,43 @@
 
 #include <GLFW/glfw3.h>
 
+#include <format>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <thread>
 #include <vector>
 
+#include "render_config.hpp"
+
 void window_init() { glfwInit(); }
 
 void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
                           int mods) {
-    if (key == GLFW_KEY_ENTER && action == GLFW_PRESS) {
-        std::cout << "pressed ebter" << std::endl;
-        auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
-        if (self) {
-            self->renderer.bound_zoom(0, 0, 2);
-            self->renderer.render_mandelbrot(64, 1, 1);
+    Window* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
+
+    if (action == GLFW_PRESS) {
+        if (key == GLFW_KEY_W || key == GLFW_KEY_S) {
+            double factor;
+            if (key == GLFW_KEY_W) {
+                factor = 1.5;
+            } else if (key == GLFW_KEY_S) {
+                factor = 1. / 1.5;
+            }
+            self->renderer.bound_zoom(factor);
+            self->update_bound_preview_rect();
+        }
+
+        else if (key == GLFW_KEY_ENTER) {
+            std::thread renderer_thread([self] {
+                self->renderer.render_mandelbrot(
+                    1, std::thread::hardware_concurrency());
+            });
+            renderer_thread.detach();
+        }
+
+        else if (key == GLFW_KEY_1) {
+            self->renderer.iterations += 64;
         }
     }
 }
@@ -31,15 +52,7 @@ void Window::framebuffer_size_callback(GLFWwindow* window, int width,
 }
 
 void Window::mouse_button_callback(GLFWwindow* window, int button, int action,
-                                   int mods) {
-    double x, y;
-    glfwGetCursorPos(window, &x, &y);
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        std::cout << "pressed at " << x << " " << y << std::endl;
-    } else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
-        std::cout << "released at " << x << " " << y << std::endl;
-    }
-}
+                                   int mods) {}
 
 std::string Window::loadFile(const std::string& path) {
     std::ifstream ifs(path, std::ios::in | std::ios::binary);
@@ -71,7 +84,7 @@ GLuint Window::compile_shader(GLenum type, const std::string& src) {
     return sh;
 }
 
-GLuint Window::link_shader_program(GLint vert, GLint frag) {
+GLuint Window::link_shader_program(GLuint vert, GLuint frag) {
     GLuint prog = glCreateProgram();
     glAttachShader(prog, vert);
     glAttachShader(prog, frag);
@@ -90,14 +103,14 @@ GLuint Window::link_shader_program(GLint vert, GLint frag) {
     return prog;
 }
 
-void Window::create_shader_prorgam(std::string vert_path,
+void Window::create_shader_prorgam(GLuint& program, std::string vert_path,
                                    std::string frag_path) {
     std::string vertSrc = loadFile(vert_path);
     std::string fragSrc = loadFile(frag_path);
 
     GLint vert = compile_shader(GL_VERTEX_SHADER, vertSrc);
     GLint frag = compile_shader(GL_FRAGMENT_SHADER, fragSrc);
-    tex_shader_program = link_shader_program(vert, frag);
+    program = link_shader_program(vert, frag);
     // shaders can be deleted after linking
     glDeleteShader(vert);
     glDeleteShader(frag);
@@ -112,25 +125,51 @@ void Window::create_fullscreen_quad() {
         -1.0f, 1.0f,  0.0f, 1.0f,  // TL
         1.0f,  1.0f,  1.0f, 1.0f   // TR
     };
-
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, tex_vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
-
-    constexpr GLsizei STRIDE = 4 * sizeof(float);
-    // position (location = 0)
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, STRIDE, (void*)0);
-    glEnableVertexAttribArray(0);
-    // texcoord (location = 1)
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, STRIDE,
-                          (void*)(2 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void Window::update_bound_preview_rect() {
+    double x1, y1, x2, y2;
+    renderer.window_get_bounds(x1, y1, x2, y2);
+
+    /*
+    std::cout << std::format("x1: {}, y1: {}, x2: {}, y2: {}\n", x1, y1, x2,
+                             y2);*/
+
+    vertices = {
+        // BR
+        (float)x2,
+        (float)y1,
+        0.f,
+        // TL
+        (float)x1,
+        (float)y1,
+        0.f,
+        // BL
+        (float)x1,
+        (float)y2,
+        0.f,
+        // BR
+        (float)x2,
+        (float)y2,
+        0.f,
+        // BR
+        (float)x2,
+        (float)y1,
+        0.f,
+    };
+
+    glBindVertexArray(vert_vao);
+    // 2. copy our vertices array in a buffer for OpenGL to use
+    glBindBuffer(GL_ARRAY_BUFFER, vert_vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(),
+                 vertices.data(), GL_STATIC_DRAW);
+    // 3. then set our vertex attributes pointers
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+                          (void*)0);
+    glEnableVertexAttribArray(0);
 }
 
 void Window::init_fullscreen_texture() {
@@ -157,7 +196,59 @@ void Window::init_fullscreen_texture() {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+void Window::init_gl_objects() {
+    create_shader_prorgam(tex_shader_program, "../shader/tex_vertex.glsl",
+                          "../shader/tex_fragment.glsl");
+    create_shader_prorgam(vert_shader_program, "../shader/vert_vertex.glsl",
+                          "../shader/vert_fragment.glsl");
+
+    // tex
+    glGenVertexArrays(1, &tex_vao);
+    glGenBuffers(1, &tex_vbo);
+
+    glBindVertexArray(tex_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, tex_vbo);
+
+    constexpr GLsizei STRIDE = 4 * sizeof(float);
+    // position (location = 0)
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, STRIDE, (void*)0);
+    glEnableVertexAttribArray(0);
+    // texcoord (location = 1)
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, STRIDE,
+                          (void*)(2 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // vert
+    glGenVertexArrays(1, &vert_vao);
+    glGenBuffers(1, &vert_vbo);
+
+    glBindVertexArray(vert_vao);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+                          (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
 void Window::_update() {
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT)) {
+        double x, y;
+        glfwGetCursorPos(window, &x, &y);
+
+        // renderer.bound_move(());
+
+        renderer.bound_move((int)x, (int)y);
+    }
+    update_bound_preview_rect();
+
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    // draw texture layer
+
     glBindTexture(GL_TEXTURE_2D, texture);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -167,18 +258,19 @@ void Window::_update() {
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    // render
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
     // bind program, texture and VAO
     glUseProgram(tex_shader_program);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glBindVertexArray(vao);
+    glBindVertexArray(tex_vao);
 
     // draw quad with triangle strip (no indices)
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    // draw vert layer
+    glUseProgram(vert_shader_program);
+    glBindVertexArray(vert_vao);
+    glDrawArrays(GL_LINE_STRIP, 0, vertices.size());
 
     // cleanup binds for clarity (not strictly required every frame)
     glBindVertexArray(0);
@@ -195,10 +287,12 @@ void Window::init(int _width, int _height) {
     width = _width;
     height = _height;
 
-    renderer.update_size_bounds(width, height);
-    renderer.update_fractal_bounds(-2.0, 1.0, -1.0, 1.0);
-    renderer.set_math_type(MathType::DOUBLE);
-    renderer.reize_pixels(width, height);
+    renderer.init_bounds();
+
+    renderer.set_window_size_i(width, height);
+    renderer.set_fractal_bounds_d(-2.0, 1.0, 0.0, 2.0);
+    renderer.set_math_type(MathType::MPFR);
+    renderer.resize_pixels(width, height);
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -225,12 +319,16 @@ void Window::start() {
 
     // init
 
-    create_shader_prorgam("../shader/vertex.glsl", "../shader/fragment.glsl");
+    // generate vao, vbos
+    init_gl_objects();
+
     create_fullscreen_quad();
+
+    update_bound_preview_rect();
 
     init_fullscreen_texture();
 
-    renderer.render_mandelbrot(64, 1, 1);
+    // renderer.render_mandelbrot(1, 1);
 
     glUseProgram(tex_shader_program);
     GLint loc = glGetUniformLocation(tex_shader_program, "screenTexture");
@@ -244,8 +342,8 @@ void Window::start() {
 
     // cleanup
     glDeleteTextures(1, &texture);
-    glDeleteBuffers(1, &vbo);
-    glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &tex_vbo);
+    glDeleteVertexArrays(1, &tex_vao);
     glDeleteProgram(tex_shader_program);
 
     glfwTerminate();

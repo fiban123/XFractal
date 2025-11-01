@@ -5,11 +5,11 @@
 #include "math.hpp"
 
 template <typename MType, MathFuncsConcept<MType> auto& M>
-void _render_mandelbrot(FractalBounds<MType>& bounds, int res, int n_threads,
-                        int max_iter, std::vector<unsigned char>& pixels) {
-    std::cout << "renderer called" << std::endl;
-
-    MType tmp, zx2, zy2, nzx, nzy, tx, ty, cx, cy, zx, zy;
+void _mandelbrot_section_renderer(int iterations, MType& x_min, MType& y_min,
+                                  int width, int height, int start_x, int end_x,
+                                  int start_y, int end_y, MType& dx, MType& dy,
+                                  std::vector<unsigned char>& pixels) {
+    MType tmp, zx2, zy2, nzx, nzy, tx, ty, cx, cy, zx, zy, zero;
     M.init(tmp);
     M.init(zx2);
     M.init(zy2);
@@ -21,42 +21,30 @@ void _render_mandelbrot(FractalBounds<MType>& bounds, int res, int n_threads,
     M.init(cy);
     M.init(zx);
     M.init(zy);
+    M.init_set_i(zero, 0);
 
     // init constants
     MType two;
     M.init_set_i(two, 2);
 
-    // compute scaling factors
-    MType dx, dy;
-    M.init(dx);
-    M.init(dy);
-    // dx = (x_max - x_min) / width
-    M.sub(dx, bounds.x_max, bounds.x_min);
-    M.div(dx, dx, bounds.width);
-    // dy = (y_max - y_min) / height
-    M.sub(dy, bounds.y_max, bounds.y_min);
-    M.div(dy, dy, bounds.height);
-
-    pixels.resize(bounds.i_width * bounds.i_height * 3);
-
-    for (int y = 0; y < bounds.i_height; y++) {
-        for (int x = 0; x < bounds.i_width; x++) {
+    for (int y = start_y; y < end_y; y++) {
+        for (int x = start_x; x < end_x; x++) {
             // map pixel coords to mandelbrot coords
             M.set_i(tx, x);
-            M.set_i(ty, y);
+            M.set_i(ty, height - y);
 
             // cy = min_x + ty * dx
             M.mul(cx, tx, dx);
-            M.add(cx, cx, bounds.x_min);
+            M.add(cx, cx, x_min);
             // cy = min_y + ty * dy
             M.mul(cy, ty, dy);
-            M.add(cy, cy, bounds.y_min);
+            M.add(cy, cy, y_min);
 
             M.set_i(zx, 0);
             M.set_i(zy, 0);
 
             int iter = 0;
-            for (; iter < (int)max_iter; iter++) {
+            for (; iter < iterations; iter++) {
                 // iterrate
 
                 // calculate zx^2 and zy^const 2
@@ -88,12 +76,12 @@ void _render_mandelbrot(FractalBounds<MType>& bounds, int res, int n_threads,
 
             // std::cout << x << " " << y << " " << iter << "\n";
             //  map iter to color
-            unsigned char color = (unsigned char)(255.0f * iter / max_iter);
-            size_t idx = (y * bounds.i_width + x) * 3;
+            unsigned char color = (unsigned char)(255.0f * iter / iterations);
+            size_t idx = (y * width + x) * 3;
             pixels[idx + 0] = color;
             pixels[idx + 1] = color;
             pixels[idx + 2] = color;
         }
-        std::cout << "c" << y << "\n";
+        // std::cout << "c" << y << "\n";
     }
 }
